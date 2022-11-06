@@ -3,111 +3,374 @@ import {
   CodeSurferColumns,
   Step,
 } from "code-surfer";
-import { github, vsDark } from "@code-surfer/themes";
 
+import { nightOwl, vsDark } from "@code-surfer/themes";
 export const theme = vsDark;
 
-# Hello 👋
+# Recoil ideas sharing 👋
 
-You are using [MDX Deck](https://github.com/jxnblk/mdx-deck) and [Code Surfer](https://codesurfer.pomb.us)
+Zhentian Wan
+
+---
+
+## Selector
+
+Deriving Data with Selectors
+
+[Redux selector](https://redux.js.org/usage/deriving-data-selectors)
+
+[Recoil selector](https://recoiljs.org/docs/basic-tutorial/selectors/)
 
 ---
 
 <CodeSurfer>
 
-```js title="This is a title" subtitle="and this a subtitle"
-function lorem(ipsum, dolor = 1) {
-  const sit = ipsum == null ? 0 : ipsum.sit;
-  dolor = sit - amet(dolor);
-  return sit
-    ? consectetur(ipsum, 0, dolor < 0 ? 0 : dolor)
-    : [];
-}
-
-function incididunt(ipsum, ut = 1) {
-  ut = labore.et(amet(ut), 0);
-  const sit = ipsum == null ? 0 : ipsum.sit;
-
-  if (!sit || ut < 1) {
-    return [];
-  }
-
-  let dolore = 0;
-  let magna = 0;
-  const aliqua = new eiusmod(labore.ut(sit / ut));
-
-  while (dolore < sit) {
-    aliqua[magna++] = consectetur(
-      ipsum,
-      dolore,
-      (dolore += ut)
-    );
-  }
-
-  return aliqua;
-}
+```ts subtitle="atom + selector example"
+const policiesAtom = atom<Policies>({
+  key: 'policies',
+  default: {
+    allowPrint: false,
+    clipboard: {
+      updateLocal: false,
+      updateRemote: false,
+    },
+    ...
+  },
+})
 ```
 
-```js
-function lorem(ipsum, dolor = 1) {
-  const sit = ipsum == null ? 0 : ipsum.sit;
-  dolor = sit - amet(dolor);
-  return sit
-    ? consectetur(ipsum, 0, dolor < 0 ? 0 : dolor)
-    : [];
-}
+```ts subtitle="atom + selector example"
+const policiesAtom = atom<Policies>({
+  key: 'policies',
+  default: {
+    allowPrint: false,
+    clipboard: {
+      updateLocal: false,
+      updateRemote: false,
+    },
+    ...
+  },
+})
 
-function adipiscing(...elit) {
-  if (!elit.sit) {
-    return [];
-  }
+export const clipboardPolicySelector = selector({
+  key: 'clipboardPolicySelector',
+  get: ({ get }) => {
+    const policies = get(policiesAtom)
+    return policies.clipboard
+  },
+})
 
-  const sed = elit[0];
-  return eiusmod.tempor(sed) ? sed : [sed];
-}
-
-function incididunt(ipsum, ut = 1) {
-  ut = labore.et(amet(ut), 0);
-  const sit = ipsum == null ? 0 : ipsum.sit;
-
-  if (!sit || ut < 1) {
-    return [];
-  }
-
-  let dolore = 0;
-  let magna = 0;
-  const aliqua = new eiusmod(labore.ut(sit / ut));
-
-  while (dolore < sit) {
-    aliqua[magna++] = consectetur(
-      ipsum,
-      dolore,
-      (dolore += ut)
-    );
-  }
-
-  return aliqua;
-}
+export const printPolicySelector = selector({
+  key: 'allowPrintSelector',
+  get: ({ get }) => {
+    const policies = get(policiesAtom)
+    return policies.allowPrint
+  },
+})
 ```
 
-```diff 1[10:14],2[15:19],3[22:27],10:12
+```diff 15:16,23:24 subtitle="get(): Depends on atom"
 
+```
+
+```diff 17,25 subtitle="return partial data"
+
+```
+
+```ts subtitle="Usage"
+// const policies = useRecoilValue(policiesState)
+// const printButtonShown = policies.allowPrint
+
+const printButtonShown = useRecoilValue(
+  printPolicySelector
+);
 ```
 
 </CodeSurfer>
 
 ---
 
-<CodeSurferColumns themes={[vsDark, github]}>
+<CodeSurfer>
+
+```ts title="Rendering Performance"
+// If only clipboard policies changed
+// Print component won't get rerendered
+
+const printButtonShown = useRecoilValue(
+  printPolicySelector
+);
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```jsx subtitle="test setup"
+const MockComponent = ({
+  onClipboardChange,
+  onPrintChange,
+  onAnyChange,
+  mockPolicies,
+}: {
+  onClipboardChange: (...args: any[]) => void,
+  onPrintChange: (...args: any[]) => void,
+  onAnyChange: (...args: any[]) => void,
+  mockPolicies?: Policies,
+}) => {
+  const setPolicies = useSetRecoilState(policiesAtom);
+  useEffect(() => {
+    if (mockPolicies) {
+      setPolicies(mockPolicies);
+    }
+  }, [mockPolicies, setPolicies]);
+
+  const onClipboardPolicyChange = () => {
+    setPolicies((state) => ({
+      ...state,
+      clipboard: { updateLocal: true, updateRemote: true },
+    }));
+  };
+
+  const onPrintPolicyChange = () => {
+    setPolicies((state) => ({
+      ...state,
+      allowPrint: true,
+    }));
+  };
+
+  return (
+    <Fragment>
+      <RecoilObserver
+        node={policiesAtom}
+        onChange={onAnyChange}
+      />
+      <RecoilObserver
+        node={clipboardPolicySelector}
+        onChange={onClipboardChange}
+      />
+      <RecoilObserver
+        node={printPolicySelector}
+        onChange={onPrintChange}
+      />
+      <button onClick={onClipboardPolicyChange}>
+        change clipboard policy
+      </button>
+      <button onClick={onPrintPolicyChange}>
+        change print policy
+      </button>
+    </Fragment>
+  );
+};
+```
+
+```diff 35:38
+
+```
+
+```diff 39:42
+
+```
+
+```diff 43:46
+
+```
+
+```diff 47:52
+
+```
+
+```diff 47:52
+
+```
+
+```diff 19:31
+
+```
+
+```jsx
+describe("policies atom", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("component should rerender based on related policy", async () => {
+    const onClipboardChange = jest.fn();
+    const onPrintChange = jest.fn();
+    const onAnyChange = jest.fn();
+    render(
+      <MockComponent
+        onAnyChange={onAnyChange}
+        onClipboardChange={onClipboardChange}
+        onPrintChange={onPrintChange}
+      />
+    );
+    // initial with default value
+    expect(onClipboardChange).toHaveBeenCalledTimes(1);
+    expect(onPrintChange).toHaveBeenCalledTimes(1);
+    expect(onAnyChange).toHaveBeenCalledTimes(1);
+});
+```
+
+```diff 17:20
+
+```
+
+```jsx
+describe("policies atom", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("component should rerender based on related policy", async () => {
+    const onClipboardChange = jest.fn();
+    const onPrintChange = jest.fn();
+    const onAnyChange = jest.fn();
+    render(
+      <MockComponent
+        onAnyChange={onAnyChange}
+        onClipboardChange={onClipboardChange}
+        onPrintChange={onPrintChange}
+      />
+    );
+    // initial with default value
+    expect(onClipboardChange).toHaveBeenCalledTimes(1);
+    expect(onPrintChange).toHaveBeenCalledTimes(1);
+    expect(onAnyChange).toHaveBeenCalledTimes(1);
+    // trigger clipboard policy change
+    await userEvent.click(
+      screen.getByText(/change clipboard policy/i)
+    );
+    expect(onClipboardChange).toHaveBeenCalledTimes(2);
+    expect(onPrintChange).toHaveBeenCalledTimes(1);
+    expect(onAnyChange).toHaveBeenCalledTimes(2);
+});
+```
+
+```jsx
+describe("policies atom", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("component should rerender based on related policy", async () => {
+    const onClipboardChange = jest.fn();
+    const onPrintChange = jest.fn();
+    const onAnyChange = jest.fn();
+    render(
+      <MockComponent
+        onAnyChange={onAnyChange}
+        onClipboardChange={onClipboardChange}
+        onPrintChange={onPrintChange}
+      />
+    );
+    // initial with default value
+    expect(onClipboardChange).toHaveBeenCalledTimes(1);
+    expect(onPrintChange).toHaveBeenCalledTimes(1);
+    expect(onAnyChange).toHaveBeenCalledTimes(1);
+    // trigger clipboard policy change
+    await userEvent.click(
+      screen.getByText(/change clipboard policy/i)
+    );
+    expect(onClipboardChange).toHaveBeenCalledTimes(2);
+    expect(onPrintChange).toHaveBeenCalledTimes(1);
+    expect(onAnyChange).toHaveBeenCalledTimes(2);
+
+    // trigger print policy change
+    await userEvent.click(
+      screen.getByText(/change print policy/i)
+    );
+    expect(onClipboardChange).toHaveBeenCalledTimes(2);
+    expect(onPrintChange).toHaveBeenCalledTimes(2);
+    expect(onAnyChange).toHaveBeenCalledTimes(3);
+  });
+});
+```
+
+</CodeSurfer>
+
+---
+
+## Entities
+
+Data normlization
+
+---
+
+<CodeSurfer>
+
+```json
+/**Tabs */
+[
+  { "id": 1, "title": "google", "url": "google.com" },
+  { "id": 2, "title": "cnn", "url": "cnn.com" }
+]
+```
+
+```json
+/**Tabs */
+// Find, update: O(N)
+[
+  { "id": 1, "title": "google", "url": "google.com" },
+  { "id": 2, "title": "cnn", "url": "cnn.com" }
+]
+```
+
+```js
+// Entities
+// Find, update: O(1)
+{
+  "1": {id: 1, title: 'google', url: 'google.com'},
+  "2": {id: 2, title: 'cnn', url: 'cnn.com'}
+}
+```
+
+```js
+// Entities
+// Find, update: O(1)
+// Has problem with ordering
+{
+  "1": {id: 1, title: 'google', url: 'google.com'},
+  "2": {id: 2, title: 'cnn', url: 'cnn.com'}
+}
+```
+
+```js
+// Entities
+// Find, update: O(1)
+// Has problem with ordering
+{
+  "1": {id: 1, title: 'google', url: 'google.com'},
+  "2": {id: 2, title: 'cnn', url: 'cnn.com'}
+}
+
+// Put ids into array
+[1, 2]
+```
+
+</CodeSurfer>
+
+---
+
+## Map the idea of Entities to Recoil
+
+---
+
+<CodeSurferColumns themes={[nightOwl, vsDark]}>
 
 <Step>
 
 ```js
-const magna = aliqua => aliqua.ut((enim, ad) => enim, 0);
+// Put ids into array
+[1, 2];
 ```
 
 ```js
-const minim = (ad, enim) => dolore.magna(ad / enim);
+export const TabIdsAtom = atom<number[]>({
+  default: [],
+  key: "isolationTabIds",
+});
 ```
 
 </Step>
@@ -115,31 +378,77 @@ const minim = (ad, enim) => dolore.magna(ad / enim);
 <Step>
 
 ```js
-const lorem = (ipsum, dolor, sit) => {
-  const amet = dolor - ipsum;
-  return consectetur.adipiscing(
-    {
-      elit: sed.eiusmod(sit - dolor) / amet + 2,
-    },
-    (tempor, incididunt) => ipsum + amet * incididunt
-  );
-};
+// Put ids into array
+[1, 2];
 
-const magna = aliqua => aliqua.ut((enim, ad) => enim, 0);
+// Entites
+{
+  "1": {id: 1, title: 'google', url: 'google.com'},
+  "2": {id: 2, title: 'cnn', url: 'cnn.com'}
+}
 ```
 
 ```js
-const minim = (ad, enim) => dolore.magna(ad / enim);
+export const TabIdsAtom = atom<number[]>({
+  default: [],
+  key: "isolationTabIds",
+});
 
-const sed = (eiusmod, tempor, incididunt) => {
-  const ut = tempor - eiusmod;
-  return labore.et(
-    {
-      amet: dolore.magna(incididunt - tempor) / ut + 2,
-    },
-    (aliqua, elit) => eiusmod + ut * elit
-  );
-};
+// store each tab in it's own atom with atomFamily
+// Benfits:
+// isolate each tab, so if you only change one tab,
+// then only that tab will get rerendered
+export const TabAtom = atomFamily<IsolationTab, number>({
+  default: {},
+  key: 'isolationTab',
+})
+
+// Usage
+const firstTab = useRecoilValue(TabAtom(1))
+```
+
+</Step>
+
+<Step>
+
+```js
+// Put ids into array
+[1, 2];
+
+// Entites
+{
+  "1": {id: 1, title: 'google', url: 'google.com'},
+  "2": {id: 2, title: 'cnn', url: 'cnn.com'}
+}
+
+// Selcted Tab id
+const selectedId = 2
+```
+
+```js
+export const TabIdsAtom = atom<number[]>({
+  default: [],
+  key: "isolationTabIds",
+});
+
+// store each tab in it's own atom with atomFamily
+// Benfits:
+// isolate each tab, so if you only change one tab,
+// then only that tab will get rerendered
+export const TabAtom = atomFamily<IsolationTab, number>({
+  default: {},
+  key: 'isolationTab',
+})
+
+// Usage
+const firstTab = useRecoilValue(TabAtom(1))
+
+// Save selected id into an atom
+export const selectedTabIdAtom = atom<number | null>({
+  default: null,
+  key: "selectedTabId"
+})
+
 ```
 
 </Step>
@@ -148,5 +457,173 @@ const sed = (eiusmod, tempor, incididunt) => {
 
 ---
 
-docs:  
-[codesurfer.pomb.us](https://codesurfer.pomb.us)
+<CodeSurferColumns themes={[vsDark, nightOwl]}>
+
+<Step>
+
+```ts title="Suggest change From"
+const isolationTabsState = atom<IsolationTabs>({
+  key: "isolationTabs",
+  default: {
+    items: [],
+    selected: 0,
+  },
+});
+```
+
+```ts title="To"
+export const TabIdsAtom = atom<number[]>({
+  default: [],
+  key: "isolationTabIds",
+});
+
+export const TabAtom = atomFamily<IsolationTab, number>({
+  default: {},
+  key: "isolationTab",
+});
+
+export const selectedTabIdAtom = atom<number | null>({
+  default: null,
+  key: "selectedTabId",
+});
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+---
+
+## useRecoilCallback
+
+[Example](https://codesandbox.io/s/lucid-clarke-z3iwnt?file=/src/App.js:870-880)
+
+---
+
+<CodeSurfer>
+
+```jsx title="anti-pattern 🚨"
+const [count, setCount] = useRecoilState(countAtom);
+
+function closureFn() {
+  const res = count * 2; // 🚨 use recoil value from closure
+  console.log("calculate res", res);
+}
+
+return (
+  <button
+    onClick={() => {
+      setCount(4);
+      closureFn();
+    }}
+  >
+    use value from closure
+  </button>
+);
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```jsx title="suggestion 👍"
+const [count, setCount] = useRecoilState(countAtom);
+
+// use useRecoilCallback when you need to
+// get access to store value
+const callbackFn = useRecoilCallback(
+  ({ snapshot }) =>
+    () => {
+      const count = snapshot
+        .getLoadable(countAtom)
+        .getValue();
+      const res = count * 2;
+      console.log("calculate res", res);
+    }
+);
+
+return (
+  <button
+    onClick={() => {
+      setCount(4);
+      callbackFn();
+    }}
+  >
+    use recoil callback
+  </button>
+);
+```
+
+```diff 5:6
+
+```
+
+```diff 8:10
+
+```
+
+```ts
+// use getValue() when you know value must be there
+const callbackFn = useRecoilCallback(
+  ({ snapshot }) =>
+    () => {
+      const count = snapshot
+        .getLoadable(countAtom)
+        .getValue(); // number
+      const res = count * 2;
+      console.log("calculate res", res);
+    }
+);
+```
+
+```ts
+// use valueMaybe() when value can be undefined
+const callbackFn = useRecoilCallback(
+  ({ snapshot }) =>
+    () => {
+      const count = snapshot
+        .getLoadable(countAtom)
+        .valueMaybe(); // number | undefined
+      if (count !== undefined) {
+        const res = count * 2;
+        console.log("calculate res", res);
+      }
+    }
+);
+```
+
+```ts
+// use valueOrThrow() when value is cirtial
+const callbackFn = useRecoilCallback(
+  ({ snapshot }) =>
+    () => {
+      try {
+        const count = snapshot
+          .getLoadable(countAtom)
+          .valueOrThrow(); // number | Throw Error
+        const res = count * 2;
+        console.log("calculate res", res);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.log(err.message);
+        }
+      }
+    }
+);
+```
+
+</CodeSurfer>
+
+---
+
+### getPromise vs getLoadable
+
+snapshot.getLoadable(syncSelector) - sync operation
+
+snapshot.getPromise(asyncSelector) - async operation
+
+---
+
+## Question? 😊
