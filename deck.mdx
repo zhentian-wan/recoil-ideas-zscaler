@@ -11,6 +11,20 @@ export const theme = vsDark;
 
 Zhentian Wan
 
+Sr. Software engineer @Zsacler
+
+---
+
+## Content
+
+- Selector
+
+- Entities
+
+- useRecoilCallback
+
+- useRecoilValueGetter
+
 ---
 
 ## Selector
@@ -496,7 +510,7 @@ export const selectedTabIdAtom = atom<number | null>({
 
 ## useRecoilCallback
 
-[Example](https://codesandbox.io/s/lucid-clarke-z3iwnt?file=/src/App.js:870-880)
+[Inside Recoil world vs Outside Recoil world](https://codesandbox.io/s/lucid-clarke-z3iwnt?file=/src/App.js:870-880)
 
 ---
 
@@ -618,11 +632,54 @@ const callbackFn = useRecoilCallback(
 
 ---
 
+[useRecoilValueGetter vs useRecoilCallback](https://codesandbox.io/s/userecoilvaluegetter-emfplv?file=/src/App.js)
+
+---
+
+<CodeSurfer>
+
+```js title="useRecoilValueGetter: doesn't work with async selector ⚠️"
+const loanAtom = atom({
+  key: "loanAtom",
+  default: 100,
+});
+
+const loanSelector = selector({
+  key: "loanSelector",
+  get: ({ get }) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const value = get(loanAtom);
+        resolve(value * 1.5);
+      }, 2000);
+    });
+  },
+});
+// Doesn't work with async selector
+const loanGetter = useRecoilValueGetter(loanSelector);
+```
+
+</CodeSurfer>
+
+---
+
 ### getPromise vs getLoadable
 
 snapshot.getLoadable(syncSelector) - sync operation
 
 snapshot.getPromise(asyncSelector) - async operation
+
+---
+
+## Resources
+
+- [Recoil Course](https://learnrecoil.com/)
+
+- [Entities in Redux ToolKit](https://redux-toolkit.js.org/api/createEntityAdapter)
+
+- [useRecoilCallback](https://recoiljs.org/docs/api-reference/core/useRecoilCallback/)
+
+- Tools for presentation [mdx-deck](https://github.com/jxnblk/mdx-deck) & [Code Surfer](https://github.com/pomber/code-surfer)
 
 ---
 
