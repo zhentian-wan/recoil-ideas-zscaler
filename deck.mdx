@@ -92,7 +92,7 @@ export const printPolicySelector = selector({
 ```
 
 ```ts subtitle="Usage"
-// const policies = useRecoilValue(policiesState)
+// const policies = useRecoilValue(policiesAtom)
 // const printButtonShown = policies.allowPrint
 
 const printButtonShown = useRecoilValue(
@@ -316,7 +316,7 @@ describe("policies atom", () => {
 
 ---
 
-## Entities
+## Idea of "Entities"
 
 Data normlization
 
@@ -353,7 +353,7 @@ Data normlization
 ```js
 // Entities
 // Find, update: O(1)
-// Has problem with ordering
+// Has problem with changing the order
 {
   "1": {id: 1, title: 'google', url: 'google.com'},
   "2": {id: 2, title: 'cnn', url: 'cnn.com'}
@@ -363,7 +363,7 @@ Data normlization
 ```js
 // Entities
 // Find, update: O(1)
-// Has problem with ordering
+// Has problem with changing the order
 {
   "1": {id: 1, title: 'google', url: 'google.com'},
   "2": {id: 2, title: 'cnn', url: 'cnn.com'}
@@ -387,7 +387,7 @@ Data normlization
 
 ```js
 // Put ids into array
-[1, 2];
+const ids = [1, 2];
 ```
 
 ```js
@@ -403,7 +403,7 @@ export const TabIdsAtom = atom<number[]>({
 
 ```js
 // Put ids into array
-[1, 2];
+const ids = [1, 2];
 
 // Entites
 {
@@ -420,7 +420,7 @@ export const TabIdsAtom = atom<number[]>({
 
 // store each tab in it's own atom with atomFamily
 // Benfits:
-// isolate each tab, so if you only change one tab,
+// isolate each tab state, so if you only modify one tab state,
 // then only that tab will get rerendered
 export const TabAtom = atomFamily<IsolationTab, number>({
   default: {},
@@ -437,7 +437,7 @@ const firstTab = useRecoilValue(TabAtom(1))
 
 ```js
 // Put ids into array
-[1, 2];
+const ids = [1, 2];
 
 // Entites
 {
@@ -457,7 +457,7 @@ export const TabIdsAtom = atom<number[]>({
 
 // store each tab in it's own atom with atomFamily
 // Benfits:
-// isolate each tab, so if you only change one tab,
+// isolate each tab state, so if you only modify one tab state,
 // then only that tab will get rerendered
 export const TabAtom = atomFamily<IsolationTab, number>({
   default: {},
@@ -530,7 +530,7 @@ export const selectedTabIdAtom = atom<number | null>({
 
 ---
 
-## useRecoilCallback
+## useRecoilCallback 🔥
 
 [Inside Recoil world vs Outside Recoil world](https://codesandbox.io/s/lucid-clarke-z3iwnt?file=/src/App.js:870-880)
 
@@ -668,15 +668,13 @@ const loanAtom = atom({
 
 const loanSelector = selector({
   key: "loanSelector",
-  get: ({ get }) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const value = get(loanAtom);
-        resolve(value * 1.5);
-      }, 2000);
-    });
+  get: async ({ get }) => {
+    const value = get(loanAtom);
+    const rate = await fetchIntrestRate();
+    return Math.round(value * (1 + rate));
   },
 });
+
 // Doesn't work with async selector
 const loanGetter = useRecoilValueGetter(loanSelector);
 ```
@@ -687,9 +685,15 @@ const loanGetter = useRecoilValueGetter(loanSelector);
 
 ### getPromise vs getLoadable
 
-snapshot.getLoadable(syncSelector) - sync operation
+<CodeSurfer>
 
-snapshot.getPromise(asyncSelector) - async operation
+```ts
+snapshot.getLoadable(atom | selector); // sync operation
+
+snapshot.getPromise(asyncSelector); // async operation
+```
+
+</CodeSurfer>
 
 ---
 
@@ -707,9 +711,9 @@ snapshot.getPromise(asyncSelector) - async operation
 
 ## Resources
 
-- [Recoil Course](https://learnrecoil.com/)
+- 📚 [Recoil Course](https://learnrecoil.com/)
 
-- Tools for presentation [mdx-deck](https://github.com/jxnblk/mdx-deck) & [Code Surfer](https://github.com/pomber/code-surfer)
+- 🏄 Tools for presentation [mdx-deck](https://github.com/jxnblk/mdx-deck) & [Code Surfer](https://github.com/pomber/code-surfer)
 
 ---
 
